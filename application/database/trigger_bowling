@@ -1,0 +1,29 @@
+delimiter //
+
+create trigger agg_bowling_stats after insert on player_bowling_stats
+for each row
+
+BEGIN
+
+	DECLARE cnt INT default 0;
+	DECLARE totalMatch INT default 0;
+	DECLARE totalRuns INT default 0;
+	DECLARE totalWickets INT default 0;
+	DECLARE totalDucks INT default 0;
+
+
+	set cnt = (select count(*) from player_batting_stats where player_id = NEW.player_id and match_id = NEW.match_id);
+
+	select matches_played, total_wickets into totalMatch, totalWickets from players where id = NEW.player_id;
+
+	IF(cnt = 1)
+	then
+		update players set total_wickets = (totalWickets+NEW.wickets) where id = NEW.player_id;
+
+	ELSE
+		update players set total_wickets = (totalWickets+NEW.wickets), matches_played = (totalMatch+1) where id = NEW.player_id;
+	END IF;
+
+END//
+
+delimiter ;
